@@ -585,19 +585,78 @@ function showFavoritesPopup() {
  */
 console.log('POPUP_TYPE.CONFIRM is:', POPUP_TYPE.CONFIRM);
 async function handleDeleteFavoriteFromPopup(favId, messageId) {
-    const confirmResult = await callGenericPopup('确定要删除这条收藏吗？', POPUP_TYPE.CONFIRM);
-    if (confirmResult === POPUP_RESULT.YES) {
-        if (removeFavoriteById(favId)) {
-            updateFavoritesPopup();
-            const messageElement = $(`#chat .mes[mesid="${messageId}"]`);
-            if (messageElement.length) {
-                const iconElement = messageElement.find('.favorite-toggle-icon i');
-                if (iconElement.length) {
-                    iconElement.removeClass('fa-solid').addClass('fa-regular');
-                }
-            }
-        }
+    // --- 日志点 1: 确认函数开始执行 ---
+    console.log(`[${pluginName}] Inside handleDeleteFavoriteFromPopup. favId: ${favId}, messageId: ${messageId}`);
+
+    // --- 日志点: 检查导入的常量 ---
+    try {
+        // 确保 POPUP_TYPE 和 POPUP_RESULT 已正确导入且可用
+        console.log(`[${pluginName}] Checking constants: POPUP_TYPE.CONFIRM = ${POPUP_TYPE.CONFIRM}, POPUP_RESULT.YES = ${POPUP_RESULT.YES}`);
+    } catch(e) {
+        console.error(`[${pluginName}] Error accessing POPUP constants. Make sure popup.js is imported correctly and POPUP_TYPE/POPUP_RESULT are exported. Error:`, e);
+        return; // 如果常量有问题，提前退出
     }
+
+    try {
+        // --- 日志点: 调用 callGenericPopup 之前 ---
+        console.log(`[${pluginName}] Attempting to call callGenericPopup('确定要删除这条收藏吗？', POPUP_TYPE.CONFIRM)...`);
+        // 调用确认弹窗
+        const confirmResult = await callGenericPopup('确定要删除这条收藏吗？', POPUP_TYPE.CONFIRM);
+        // --- 日志点 2: 确认 callGenericPopup 调用完成并获取结果 ---
+        // 无论用户点击“是”还是“否”或取消，这里都应该打印日志
+        console.log(`[${pluginName}] callGenericPopup completed. Result received:`, confirmResult);
+
+        // --- 日志点: 检查结果是否等于 POPUP_RESULT.YES ---
+        console.log(`[${pluginName}] Comparing confirmResult (${confirmResult}) with POPUP_RESULT.YES (${POPUP_RESULT.YES}). Is equal? :`, confirmResult === POPUP_RESULT.YES);
+
+        // 检查用户是否点击了确认按钮 (通常是 POPUP_RESULT.YES)
+        if (confirmResult === POPUP_RESULT.YES) {
+            // --- 日志点: 确认用户点击了“是”，准备删除 ---
+            console.log(`[${pluginName}] User confirmed deletion (Result is YES). Attempting to call removeFavoriteById('${favId}')...`);
+            // 调用实际的删除函数
+            const removed = removeFavoriteById(favId);
+            // --- 日志点: 确认 removeFavoriteById 的返回值 ---
+            console.log(`[${pluginName}] removeFavoriteById('${favId}') returned: ${removed}`);
+
+            // 如果删除成功
+            if (removed) {
+                // --- 日志点: 确认删除成功，准备更新UI ---
+                console.log(`[${pluginName}] Favorite removed successfully (removed = true). Attempting to update popup and message icon...`);
+                // 更新收藏夹弹窗列表
+                updateFavoritesPopup();
+                // 找到聊天界面中对应的消息元素
+                const messageElement = $(`#chat .mes[mesid="${messageId}"]`);
+                console.log(`[${pluginName}] Found message element for mesid ${messageId}:`, messageElement.length > 0 ? messageElement[0] : 'Not found in DOM');
+                if (messageElement.length) {
+                    // 找到消息上的收藏图标
+                    const iconElement = messageElement.find('.favorite-toggle-icon i');
+                    console.log(`[${pluginName}] Found icon element inside message:`, iconElement.length > 0 ? iconElement[0] : 'Not found in message element');
+                    if (iconElement.length) {
+                        // 将图标从实心星变为常规星
+                        iconElement.removeClass('fa-solid').addClass('fa-regular');
+                        console.log(`[${pluginName}] Updated icon on message ${messageId} to regular (unfavorited).`);
+                    }
+                }
+                // 可以在这里加一个 toastr 提示用户删除成功
+                // toastr.success('收藏已删除'); // 取消注释以启用
+            } else {
+                 // --- 日志点: removeFavoriteById 返回 false ---
+                 console.warn(`[${pluginName}] removeFavoriteById('${favId}') returned false. Deletion might have failed internally (e.g., ID not found in metadata).`);
+                 // 可以在这里加一个 toastr 提示用户删除失败
+                 // toastr.error('删除收藏失败'); // 取消注释以启用
+            }
+        } else {
+            // --- 日志点: 用户取消或弹窗返回非 YES 结果 ---
+            console.log(`[${pluginName}] User cancelled deletion or popup returned a non-YES result (Result was: ${confirmResult}). No action taken.`);
+        }
+    } catch (error) {
+        // --- 日志点: 捕获 handleDeleteFavoriteFromPopup 内部发生的任何未预料错误 ---
+        console.error(`[${pluginName}] An unexpected error occurred inside handleDeleteFavoriteFromPopup:`, error);
+        // 可以在这里加一个 toastr 提示用户发生错误
+        // toastr.error('处理删除操作时发生错误'); // 取消注释以启用
+    }
+     // --- 日志点: 确认函数执行流程结束 ---
+     console.log(`[${pluginName}] handleDeleteFavoriteFromPopup finished execution.`);
 }
 
 /**
