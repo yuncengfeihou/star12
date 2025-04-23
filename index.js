@@ -6,8 +6,6 @@ import {
     POPUP_RESULT,
 } from '../../../popup.js';
 
-
-
 // ---> 新增顶层日志 <---
 console.log('[star] At top level, after imports: typeof POPUP_RESULT =', typeof POPUP_RESULT);
 if (typeof POPUP_RESULT === 'object' && POPUP_RESULT !== null) {
