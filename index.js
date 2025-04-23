@@ -583,6 +583,7 @@ function showFavoritesPopup() {
  * @param {string} favId The favorite ID
  * @param {string} messageId The message ID (mesid string)
  */
+console.log('POPUP_TYPE.CONFIRM is:', POPUP_TYPE.CONFIRM);
 async function handleDeleteFavoriteFromPopup(favId, messageId) {
     const confirmResult = await callGenericPopup('确定要删除这条收藏吗？', POPUP_TYPE.CONFIRM);
     if (confirmResult === POPUP_RESULT.YES) {
