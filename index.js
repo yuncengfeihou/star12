@@ -1,24 +1,3 @@
-// Import from the core script
-import {
-    eventSource,
-    event_types,
-    messageFormatting,
-    chat,                     // 用于访问聊天记录 
-    clearChat,                // 用于清空聊天
-    doNewChat,                // 用于创建新聊天
-    openCharacterChat,        // 用于打开角色聊天
-    renameChat,               // 用于重命名聊天 
-    // addOneMessage,         // 不直接导入, 使用 context.addOneMessage
-} from '../../../../script.js';
-
-// Import from the extension helper script
-import {
-    getContext,
-    renderExtensionTemplateAsync,
-    extension_settings,
-    saveMetadataDebounced
-} from '../../../extensions.js';
-
 // Import from the Popup utility script
 import {
     Popup,
@@ -27,15 +6,7 @@ import {
     POPUP_RESULT,
 } from '../../../popup.js';
 
-// Import for group chats
-import { openGroupChat } from "../../../group-chats.js";
 
-// Import from the general utility script
-import {
-    uuidv4,
-    timestampToMoment,
-    waitUntilCondition, // *** 关键：为优化方案添加导入 ***
-} from '../../../utils.js';
 
 // ---> 新增顶层日志 <---
 console.log('[star] At top level, after imports: typeof POPUP_RESULT =', typeof POPUP_RESULT);
