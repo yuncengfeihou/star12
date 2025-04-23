@@ -37,8 +37,17 @@ import {
     waitUntilCondition, // *** 关键：为优化方案添加导入 ***
 } from '../../../utils.js';
 
+// ---> 新增顶层日志 <---
+console.log('[star] At top level, after imports: typeof POPUP_RESULT =', typeof POPUP_RESULT);
+if (typeof POPUP_RESULT === 'object' && POPUP_RESULT !== null) {
+    console.log('[star] At top level, POPUP_RESULT.YES =', POPUP_RESULT.YES);
+    console.log('[star] At top level, POPUP_RESULT =', JSON.stringify(POPUP_RESULT));
+} else {
+    console.log('[star] At top level, POPUP_RESULT is not a valid object:', POPUP_RESULT);
+}
+
 // Define plugin folder name (important for consistency)
-const pluginName = 'star'; // 保持文件夹名称一致
+const pluginName = 'star12'; // 保持文件夹名称一致
 
 // Initialize plugin settings if they don't exist
 if (!extension_settings[pluginName]) {
