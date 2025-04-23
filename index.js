@@ -468,13 +468,19 @@ function showFavoritesPopup() {
             );
             console.log(`${pluginName}: Popup instance created successfully.`);
             $(favoritesPopup.content).on('click', function(event) {
+                // ---> 在这里添加第一个日志 <---
+                console.log(`[${pluginName}] Popup content click detected. Target element:`, event.target);
+
                 const target = $(event.target);
+
                 if (target.hasClass('pagination-prev')) {
+                    console.log(`[${pluginName}] Matched .pagination-prev click.`); // 日志：确认分支
                     if (currentPage > 1) {
                         currentPage--;
                         updateFavoritesPopup();
                     }
                 } else if (target.hasClass('pagination-next')) {
+                    console.log(`[${pluginName}] Matched .pagination-next click.`); // 日志：确认分支
                     const chatMetadata = ensureFavoritesArrayExists();
                     const totalFavorites = chatMetadata ? chatMetadata.favorites.length : 0;
                     const totalPages = Math.max(1, Math.ceil(totalFavorites / itemsPerPage));
@@ -484,36 +490,72 @@ function showFavoritesPopup() {
                     }
                 }
                 else if (target.hasClass('preview-favorites-btn')) {
+                    console.log(`[${pluginName}] Matched .preview-favorites-btn click.`); // 日志：确认分支
                     handlePreviewButtonClick(); // 调用预览功能
                     if (favoritesPopup) {
                         favoritesPopup.hide();
                         console.log(`${pluginName}: 点击预览按钮，关闭收藏夹弹窗。`);
                     }
                 }
-                // --- 已移除处理 .close-popup 的 else if 分支 ---
-                // else if (target.hasClass('close-popup')) {
-                //     favoritesPopup.hide();
-                // }
-                else if (target.hasClass('clear-invalid')) { // <-- 这个分支仍然保留
-                    handleClearInvalidFavorites();         // <-- 对应的函数调用也保留
+                else if (target.hasClass('clear-invalid')) { // 这个分支在原始代码中仍然存在
+                    console.log(`[${pluginName}] Matched .clear-invalid click.`); // 日志：确认分支
+                    handleClearInvalidFavorites();
                 }
                 else if (target.hasClass('fa-pencil')) {
+                    console.log(`[${pluginName}] Matched .fa-pencil click. Target:`, target[0]); // 日志：确认分支
                     const favItem = target.closest('.favorite-item');
+                    console.log(`[${pluginName}] Pencil: Found parent .favorite-item:`, favItem ? favItem[0] : 'null'); // 日志：确认查找
                     if (favItem && favItem.length) {
                          const favId = favItem.data('fav-id');
-                         handleEditNote(favId);
+                         console.log(`[${pluginName}] Pencil: Extracted favId: ${favId}. Attempting to call handleEditNote...`); // 日志：确认调用
+                         try {
+                            handleEditNote(favId);
+                             console.log(`[${pluginName}] Pencil: handleEditNote call completed without throwing immediate error.`);
+                         } catch(e) {
+                             console.error(`[${pluginName}] Pencil: Error calling handleEditNote:`, e);
+                         }
                     } else {
                          console.warn(`${pluginName}: Clicked edit icon, but couldn't find parent .favorite-item`);
                     }
                 }
+                // ---> 修改这个 else if 分支 <---
                 else if (target.hasClass('fa-trash')) {
+                    // ---> 添加日志：确认进入了分支 <---
+                    console.log(`[${pluginName}] Matched .fa-trash click. Target:`, target[0]);
+
                     const favItem = target.closest('.favorite-item');
+                    // ---> 添加日志：确认找到了父元素 <---
+                    console.log(`[${pluginName}] Trash: Found parent .favorite-item:`, favItem ? favItem[0] : 'null');
+
                     if (favItem && favItem.length) {
-                        const favId = favItem.data('fav-id');
-                        const msgId = favItem.data('msg-id');
-                        handleDeleteFavoriteFromPopup(favId, msgId);
+                         const favId = favItem.data('fav-id');
+                         const msgId = favItem.data('msg-id');
+                         // ---> 添加日志：确认获取了 ID 并准备调用函数 <---
+                         console.log(`[${pluginName}] Trash: Extracted favId: ${favId}, msgId: ${msgId}. Attempting to call handleDeleteFavoriteFromPopup...`);
+                         try {
+                             // 注意：handleDeleteFavoriteFromPopup 是异步的，但我们在这里不 await 它，
+                             // 因为事件处理器通常不设计为等待异步操作完成。
+                             // 我们主要关心的是调用本身是否成功以及是否立即抛出错误。
+                             handleDeleteFavoriteFromPopup(favId, msgId);
+                             console.log(`[${pluginName}] Trash: handleDeleteFavoriteFromPopup call initiated without throwing immediate error.`);
+                         } catch(e) {
+                             // 捕获 handleDeleteFavoriteFromPopup 同步执行部分可能抛出的错误
+                             console.error(`[${pluginName}] Trash: Error calling handleDeleteFavoriteFromPopup:`, e);
+                         }
+
                     } else {
+                         // ---> 确认这个警告是否被打印 <---
                          console.warn(`${pluginName}: Clicked delete icon, but couldn't find parent .favorite-item`);
+                    }
+                }
+                // ---> 添加一个日志，以防以上条件都未匹配 <---
+                else {
+                    // 检查被点击元素本身或其父元素是否是我们关心的某个可交互元素的一部分，
+                    // 避免点击普通文本区域也打印日志。
+                    if (target.closest('.menu_button, .favorite-item, .pagination-prev, .pagination-next, .preview-favorites-btn, .clear-invalid, .fa-pencil, .fa-trash').length === 0) {
+                         // 如果点击的不是任何已知可交互元素或其子元素，则不打印，减少干扰
+                    } else {
+                         console.log(`[${pluginName}] Click did not match any specific handler in the popup. Target element class:`, event.target.className, 'Target element:', event.target);
                     }
                 }
             });
