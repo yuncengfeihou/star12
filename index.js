@@ -581,71 +581,51 @@ function showFavoritesPopup() {
 }
 
 /**
- * Handles the deletion of a favorite from the popup
+ * Handles the deletion of a favorite from the popup (with simplified logging)
  * @param {string} favId The favorite ID
  * @param {string} messageId The message ID (mesid string)
  */
 async function handleDeleteFavoriteFromPopup(favId, messageId) {
-    // 日志点 1: 确认函数开始执行
-    console.log(`[${pluginName}] Inside handleDeleteFavoriteFromPopup. favId: ${favId}, messageId: ${messageId}`);
-
-    // 日志点: 检查导入的常量
-    try {
-        // 使用正确的常量 AFFIRMATIVE
-        console.log(`[${pluginName}] Checking constants: POPUP_TYPE.CONFIRM = ${POPUP_TYPE.CONFIRM}, POPUP_RESULT.AFFIRMATIVE = ${POPUP_RESULT.AFFIRMATIVE}`);
-    } catch(e) {
-        console.error(`[${pluginName}] Error accessing POPUP constants. Make sure popup.js is imported correctly and POPUP_TYPE/POPUP_RESULT are exported. Error:`, e);
-        return;
-    }
+    // 保留: 确认函数入口及参数
+    console.log(`[${pluginName}] Attempting to delete favorite: favId=${favId}, messageId=${messageId}`);
 
     try {
-        // 日志点: 调用 callGenericPopup 之前
-        console.log(`[${pluginName}] Attempting to call callGenericPopup('确定要删除这条收藏吗？', POPUP_TYPE.CONFIRM)...`);
+        // 检查常量只在出错时记录
+        if (typeof POPUP_TYPE?.CONFIRM === 'undefined' || typeof POPUP_RESULT?.AFFIRMATIVE === 'undefined') {
+             console.error(`[${pluginName}] Error: POPUP_TYPE.CONFIRM or POPUP_RESULT.AFFIRMATIVE is undefined. Check imports from popup.js.`);
+             return;
+        }
+
         const confirmResult = await callGenericPopup('确定要删除这条收藏吗？', POPUP_TYPE.CONFIRM);
-        // 日志点 2: 确认 callGenericPopup 调用完成并获取结果
-        console.log(`[${pluginName}] callGenericPopup completed. Result received:`, confirmResult);
 
-        // *** 这里是关键修改：使用 AFFIRMATIVE ***
-        console.log(`[${pluginName}] Comparing confirmResult (${confirmResult}) with POPUP_RESULT.AFFIRMATIVE (${POPUP_RESULT.AFFIRMATIVE}). Is equal? :`, confirmResult === POPUP_RESULT.AFFIRMATIVE);
-
-        // *** 使用正确的常量进行比较 ***
         if (confirmResult === POPUP_RESULT.AFFIRMATIVE) {
-            // 日志点: 确认用户点击了“是”，准备删除
-            console.log(`[${pluginName}] User confirmed deletion (Result is AFFIRMATIVE). Attempting to call removeFavoriteById('${favId}')...`);
             const removed = removeFavoriteById(favId);
-            // 日志点: 确认 removeFavoriteById 的返回值
-            console.log(`[${pluginName}] removeFavoriteById('${favId}') returned: ${removed}`);
 
             if (removed) {
-                // 日志点: 确认删除成功，准备更新UI
-                console.log(`[${pluginName}] Favorite removed successfully (removed = true). Attempting to update popup and message icon...`);
+                // 成功删除后，只执行操作，不打印过多日志
                 updateFavoritesPopup();
                 const messageElement = $(`#chat .mes[mesid="${messageId}"]`);
-                console.log(`[${pluginName}] Found message element for mesid ${messageId}:`, messageElement.length > 0 ? messageElement[0] : 'Not found in DOM');
                 if (messageElement.length) {
                     const iconElement = messageElement.find('.favorite-toggle-icon i');
-                    console.log(`[${pluginName}] Found icon element inside message:`, iconElement.length > 0 ? iconElement[0] : 'Not found in message element');
                     if (iconElement.length) {
                         iconElement.removeClass('fa-solid').addClass('fa-regular');
-                        console.log(`[${pluginName}] Updated icon on message ${messageId} to regular (unfavorited).`);
                     }
                 }
-                 // toastr.success('收藏已删除'); // 可以取消注释
+                // 可以选择性地保留一个成功提示，或依赖 Toastr
+                // console.log(`[${pluginName}] Favorite ${favId} successfully removed.`);
             } else {
-                 console.warn(`[${pluginName}] removeFavoriteById('${favId}') returned false. Deletion might have failed internally.`);
-                 // toastr.error('删除收藏失败'); // 可以取消注释
+                 // 保留: 删除操作本身失败的警告
+                 console.warn(`[${pluginName}] removeFavoriteById('${favId}') returned false. Favorite might not have been found in metadata.`);
             }
         } else {
-            // 日志点: 用户取消或弹窗返回非 AFFIRMATIVE 结果
-            console.log(`[${pluginName}] User cancelled deletion or popup returned a non-AFFIRMATIVE result (Result was: ${confirmResult}). No action taken.`);
+            // 保留: 用户取消操作的日志
+            console.log(`[${pluginName}] User cancelled favorite deletion (popup result: ${confirmResult}).`);
         }
     } catch (error) {
-        // 日志点: 捕获 handleDeleteFavoriteFromPopup 内部发生的任何未预料错误
-        console.error(`[${pluginName}] An unexpected error occurred inside handleDeleteFavoriteFromPopup:`, error);
-        // toastr.error('处理删除操作时发生错误'); // 可以取消注释
-    }
-     // 日志点: 确认函数执行流程结束
-     console.log(`[${pluginName}] handleDeleteFavoriteFromPopup finished execution.`);
+        // 保留: 捕获整个过程中的意外错误
+        console.error(`[${pluginName}] Error during favorite deletion process (favId: ${favId}):`, error);
+    }   
+    console.log(`[${pluginName}] handleDeleteFavoriteFromPopup finished for favId: ${favId}`);
 }
 
 /**
